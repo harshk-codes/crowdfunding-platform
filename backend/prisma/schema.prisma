@@ -1,0 +1,62 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// User Model
+model User {
+  id            Int           @id @default(autoincrement())
+  username      String        @unique
+  email         String        @unique
+  password      String
+  campaigns     Campaign[]
+  contributions Contribution[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// Campaign Model
+model Campaign {
+  id             Int            @id @default(autoincrement())
+  title          String
+  description    String?        @db.Text
+  goal           Decimal        @db.Decimal(10, 2)
+  currentAmount  Decimal        @default(0) @db.Decimal(10, 2)
+  deadline       DateTime
+  status         CampaignStatus @default(Active)
+  user           User           @relation(fields: [userId], references: [id])
+  userId         Int
+  contributions  Contribution[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+// Contribution Model
+model Contribution {
+  id                Int      @id @default(autoincrement())
+  amount            Decimal  @db.Decimal(10, 2)
+  user              User     @relation(fields: [userId], references: [id])
+  userId            Int
+  campaign          Campaign @relation(fields: [campaignId], references: [id])
+  campaignId        Int
+  transactionStatus Status   @default(COMPLETED)
+  createdAt         DateTime @default(now())
+}
+
+// Enums
+enum CampaignStatus {
+  Active
+  COMPLETED
+  EXPIRED
+}
+
+enum Status {
+  PENDING
+  COMPLETED
+  FAILED
+}
